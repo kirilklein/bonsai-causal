@@ -16,6 +16,14 @@ def main_estimate(config_path):
 
     # Logger
     logger = logging.getLogger("estimate")
+    logger.info("Loaded estimate config from: %s", config_path)
+    print(f"[estimate] Loaded config from: {config_path}", flush=True)
+    try:
+        estimator_section = dict(cfg.estimator)
+    except Exception:
+        estimator_section = cfg.get("estimator", {})
+    logger.info("Raw estimator config section: %s", estimator_section)
+    print(f"[estimate] Raw estimator config: {estimator_section}", flush=True)
 
     estimator = EffectEstimator(cfg, logger)
     estimator.run()

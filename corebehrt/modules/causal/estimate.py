@@ -79,7 +79,8 @@ class EffectEstimator:
         self.estimator_cfg: dict = self.cfg.estimator
         self.init_estimator_args(self.estimator_cfg)
         self._init_plot_configs()
-        self.effect_type: str = self.cfg.estimator.effect_type
+        self.effect_type: str = str(self.cfg.estimator.effect_type).upper()
+        self._log_estimator_settings()
         self.df = pd.read_csv(self.predictions_file)
         self.analysis_df = self._get_analysis_cohort(self.df)
         self._save_analysis_pids(self.analysis_df)
@@ -91,6 +92,28 @@ class EffectEstimator:
         self.counterfactual_df = self._load_counterfactual_outcomes()
         self.ite_df = self._load_ite_data()
         self._init_bias_introducer()
+
+    def _log_estimator_settings(self) -> None:
+        """Print estimand/methods so Azure logs show what config actually loaded."""
+        methods = list(self.estimator_cfg.get("methods", []))
+        msg = (
+            f"Estimator settings from config: effect_type={self.effect_type!r} "
+            f"(estimand), methods={methods}, n_bootstrap={self.n_bootstrap}, "
+            f"common_support={self.common_support}, "
+            f"common_support_threshold={self.common_support_threshold}, "
+            f"clip_percentile={self.clip_percentile}"
+        )
+        self.logger.info(msg)
+        print(f"[estimate] {msg}", flush=True)
+        if self.effect_type not in {"ATE", "ATT", "ATC"}:
+            self.logger.warning(
+                "Unusual effect_type=%r — expected ATE, ATT, or ATC", self.effect_type
+            )
+        # Common support / cohort size do NOT depend on ATT vs ATE.
+        self.logger.info(
+            "Note: common-support filtering is independent of effect_type; "
+            "ATT vs ATE changes weighting/estimand, not which patients pass PS overlap."
+        )
 
     def _save_analysis_pids(self, df: pd.DataFrame) -> None:
         """Save analysis pids to disk."""
@@ -162,11 +185,15 @@ class EffectEstimator:
 
             # 6. Tag results with the outcome name and collect
             effect_df[OUTCOME] = outcome_name
+            effect_df["effect_type"] = self.effect_type
 
             current_columns = effect_df.columns.tolist()
             filter_columns = [
                 col for col in self.RELEVANT_COLUMNS if col in current_columns
             ]
+            # Keep estimand tag even if not in EffectColumns schema
+            if "effect_type" not in filter_columns:
+                filter_columns = ["effect_type"] + filter_columns
 
             effect_df_clean = effect_df[filter_columns]
             effect_df_clean = effect_df_clean.round(EFFECT_ROUND_DIGIT)
@@ -193,7 +220,15 @@ class EffectEstimator:
 
         # --- 1. Run Theoretical Estimators (if any) ---
         if theoretical_methods:
-            self.logger.info(f"Running theoretical estimator: {theoretical_methods[0]}")
+            self.logger.info(
+                "Running theoretical estimator %s with effect_type=%s",
+                theoretical_methods[0],
+                self.effect_type,
+            )
+            print(
+                f"[estimate] TMLE_TH effect_type={self.effect_type}",
+                flush=True,
+            )
             # Build only the TMLE estimator for a single run
             tmle_th_estimator = TMLE(
                 effect_type=self.effect_type,
@@ -211,7 +246,16 @@ class EffectEstimator:
 
         # --- 2. Run Bootstrap Estimators (if any) ---
         if bootstrap_methods:
-            self.logger.info(f"Running bootstrap estimators: {bootstrap_methods}")
+            self.logger.info(
+                "Running bootstrap estimators %s with effect_type=%s",
+                bootstrap_methods,
+                self.effect_type,
+            )
+            print(
+                f"[estimate] bootstrap methods={bootstrap_methods} "
+                f"effect_type={self.effect_type}",
+                flush=True,
+            )
             # Build a MultiEstimator for the remaining methods
             bootstrap_estimator_list = self._build_estimators_for_methods(
                 bootstrap_methods
