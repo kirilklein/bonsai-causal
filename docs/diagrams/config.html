@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>What controls a run and its versions? · BONSAI Causal</title><style>
+:root {
+  color-scheme: light;
+  --paper: #f7fafb;
+  --ink: #041228;
+  --muted: #4b586e;
+  --rule: #c3cad4;
+  --accent: #35b2bf;
+  --accent-text: #1f7f89;
+  --sans: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--paper);
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+a {
+  color: inherit;
+  text-underline-offset: 4px;
+}
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+[hidden] {
+  display: none !important;
+}
+.shell {
+  max-width: 1360px;
+  margin: auto;
+  padding: 28px 40px 40px;
+}
+.brand {
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.18em;
+  text-decoration: none;
+}
+.brand span {
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  margin-left: 8px;
+  color: var(--muted);
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 64px;
+  margin-top: 12px;
+}
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.breadcrumbs button,
+.nav-button {
+  border: 0;
+  background: transparent;
+  padding: 12px 8px;
+  min-height: 44px;
+}
+.breadcrumbs button {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.breadcrumbs span {
+  padding: 8px;
+}
+.nav-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.nav-button {
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 8px 14px;
+}
+.context {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  margin: 8px 0 16px;
+}
+.context[hidden] + main {
+  margin-top: 16px;
+}
+.context-anchor {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 220px;
+  min-height: 56px;
+  padding: 8px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: #e5f3f6;
+}
+.context-anchor small {
+  color: var(--muted);
+  font-size: 10px;
+  margin-bottom: 4px;
+}
+.context-anchor strong {
+  font-weight: 600;
+  font-size: 12px;
+}
+h1 {
+  font-size: 28px;
+  font-weight: 300;
+  letter-spacing: -0.025em;
+  margin: 0 0 10px;
+}
+.subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.6;
+  max-width: 85ch;
+}
+.diagram-scroll {
+  overflow-x: auto;
+  margin-top: 12px;
+  border-radius: 4px;
+}
+.diagram {
+  width: 100%;
+  display: block;
+  min-width: 880px;
+}
+.node-name {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+.node-sub {
+  font-family: var(--mono);
+  font-size: 9px;
+  fill: var(--muted);
+}
+.tag,
+.edge-label,
+.lane-label {
+  font-family: var(--mono);
+  font-size: 8px;
+  fill: var(--muted);
+  letter-spacing: 0.08em;
+}
+.lane-label {
+  font-size: 10px;
+}
+.node-box {
+  fill: #fff;
+  stroke: #718093;
+  stroke-width: 1;
+}
+.node.focal .node-box {
+  fill: #e5f3f6;
+  stroke: var(--accent);
+  stroke-width: 1.2;
+}
+.node.artifact .node-box {
+  fill: #ebeff2;
+}
+.node.external .node-box {
+  fill: #eff3f5;
+  stroke-dasharray: 4 3;
+}
+.node-link {
+  cursor: pointer;
+  text-decoration: none;
+}
+.node-link:hover .node-box {
+  stroke: var(--ink);
+  stroke-width: 1.8;
+}
+.disclosure {
+  font-family: var(--sans);
+  font-size: 12px;
+  fill: var(--accent-text);
+}
+.related {
+  font-family: var(--sans);
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  fill: var(--muted);
+}
+.evidence {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.evidence summary {
+  cursor: pointer;
+  width: fit-content;
+  padding: 12px 0;
+}
+.evidence ul {
+  line-height: 1.8;
+  padding-left: 20px;
+}
+.evidence code,
+.source-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.source-meta {
+  color: var(--muted);
+  line-height: 1.8;
+}
+pre {
+  overflow: auto;
+  max-height: 65vh;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 24px;
+  line-height: 1.65;
+  font-size: 12px;
+  tab-size: 4;
+}
+pre code {
+  font-family: var(--mono);
+}
+:focus-visible {
+  outline: 3px solid var(--accent-text);
+  outline-offset: 5px;
+}
+.node-link:focus-visible {
+  outline: none;
+}
+.node-link:focus-visible .node-box {
+  stroke: var(--accent-text);
+  stroke-width: 3;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.flight {
+  position: fixed;
+  pointer-events: none;
+  z-index: 10;
+  margin: 0;
+  transform-origin: top left;
+}
+.flight {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  font-size: 12px;
+  padding: 8px 12px;
+  text-align: center;
+}
+.flight strong {
+  font-weight: 600;
+}
+.standalone-nav {
+  display: flex;
+  gap: 20px;
+  font-size: 12px;
+  margin: 24px 0;
+}
+@media (max-width: 640px) {
+  .shell {
+    padding: 20px 16px;
+  }
+  .toolbar {
+    align-items: flex-start;
+    flex-direction: column-reverse;
+    gap: 0;
+  }
+  .breadcrumbs {
+    font-size: 11px;
+  }
+  h1 {
+    font-size: 24px;
+    line-height: 1.25;
+  }
+  .subtitle {
+    font-size: 13px;
+  }
+  .diagram-scroll {
+    border: 1px solid #dce2e8;
+  }
+  .diagram {
+    min-width: 1280px;
+  }
+  .context-anchor {
+    min-width: 200px;
+  }
+  pre {
+    padding: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media print {
+  .toolbar,
+  .context,
+  .evidence,
+  .standalone-nav {
+    display: none !important;
+  }
+  .shell {
+    padding: 0;
+    max-width: none;
+  }
+  .diagram {
+    min-width: 0;
+  }
+  .diagram-scroll {
+    overflow: visible;
+    border: 0;
+  }
+  .brand {
+    display: none;
+  }
+}
+
+</style></head><body><div class="shell"><a class="brand" href="index.html">BONSAI <span>Causal / architecture</span></a><nav class="standalone-nav" aria-label="Document"><a href="index.html">Open interactive overview</a></nav><main><h1 tabindex="-1">What controls a run and its versions?</h1><p class="subtitle">Stage YAML names the inputs and settings; requirements.txt pins direct package versions.</p><div class="diagram-scroll" tabindex="0" role="region" aria-label="Scrollable diagram: Configuration &amp; versions"><svg class="diagram" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-labelledby="config-title config-desc"><title id="config-title">What controls a run and its versions?</title><desc id="config-desc">Local commands and Azure jobs both use stage YAML, whose paths reference artifacts. Package installation reads project metadata and requirements. Azure environment construction also reads requirements and adds unpinned extras.</desc><defs><marker id="config-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4b586e"/></marker><marker id="config-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#35b2bf"/></marker><marker id="config-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker></defs><rect width="1280" height="720" fill="#f7fafb"/><text class="lane-label" x="80" y="76">RUN INPUTS</text><text class="lane-label" x="744" y="76">SOFTWARE ENVIRONMENT</text><path class="connector" d="M 184 216 L 184.0 264.0 Q 184 272 192.0 272.0 L 272.0 272.0 Q 280 272 280.0 280.0 L 280 344" fill="none" stroke="#4b586e" stroke-width="1.2" marker-end="url(#config-arrow)"/><path class="connector" d="M 488 216 L 488.0 264.0 Q 488 272 480.0 272.0 L 400.0 272.0 Q 392 272 392.0 280.0 L 392 344" fill="none" stroke="#4b586e" stroke-width="1.2" marker-end="url(#config-arrow)"/><path class="connector" d="M 336 432 L 336 544" fill="none" stroke="#4b586e" stroke-width="1.2" marker-end="url(#config-arrow)"/><path class="connector" d="M 844 216 L 844 344" fill="none" stroke="#4b586e" stroke-width="1.2" marker-end="url(#config-arrow)"/><path class="connector" d="M 1144 216 L 1144 344" fill="none" stroke="#4b586e" stroke-width="1.2" marker-end="url(#config-arrow)"/><path class="connector" d="M 944 388 L 1048 388" fill="none" stroke="#4b586e" stroke-width="1.2" marker-end="url(#config-arrow)"/><g class="edge-caption"><rect x="211.0" y="243" width="42.0" height="16" fill="#f7fafb"/><text class="edge-label" x="232" y="254" text-anchor="middle">READS</text></g><g class="edge-caption"><rect x="418.6" y="243" width="62.800000000000004" height="16" fill="#f7fafb"/><text class="edge-label" x="450" y="254" text-anchor="middle">OVERRIDES</text></g><g class="edge-caption"><rect x="366.0" y="481" width="68.0" height="16" fill="#f7fafb"/><text class="edge-label" x="400" y="492" text-anchor="middle">REFERENCES</text></g><g class="edge-caption"><rect x="861.0" y="275" width="42.0" height="16" fill="#f7fafb"/><text class="edge-label" x="882" y="286" text-anchor="middle">READS</text></g><g class="edge-caption"><rect x="1159.0" y="275" width="42.0" height="16" fill="#f7fafb"/><text class="edge-label" x="1180" y="286" text-anchor="middle">READS</text></g><g class="edge-caption"><rect x="975.0" y="359" width="42.0" height="16" fill="#f7fafb"/><text class="edge-label" x="996" y="370" text-anchor="middle">LOADS</text></g><g class="node " id="config-local" data-node="local" data-label="Local command"><rect class="node-box" x="80" y="128" width="208" height="88" rx="6"/><text class="tag" x="184.0" y="147" text-anchor="middle">ENTRY</text><text class="node-name" x="184.0" y="175.0" text-anchor="middle">Local command</text><text class="node-sub" x="184.0" y="193.0" text-anchor="middle">--config_path</text></g><g class="node " id="config-job" data-node="job" data-label="Azure component"><rect class="node-box" x="384" y="128" width="208" height="88" rx="6"/><text class="tag" x="488.0" y="147" text-anchor="middle">ENTRY</text><text class="node-name" x="488.0" y="175.0" text-anchor="middle">Azure component</text><text class="node-sub" x="488.0" y="193.0" text-anchor="middle">job config + input paths</text></g><g class="node focal" id="config-yaml" data-node="yaml" data-label="Stage YAML"><rect class="node-box" x="232" y="344" width="208" height="88" rx="6"/><text class="tag" x="336.0" y="363" text-anchor="middle">SHARED INPUT</text><text class="node-name" x="336.0" y="391.0" text-anchor="middle">Stage YAML</text><text class="node-sub" x="336.0" y="409.0" text-anchor="middle">load_config → Config</text></g><g class="node artifact" id="config-artifacts" data-node="artifacts" data-label="Data &amp; checkpoints"><rect class="node-box" x="232" y="544" width="208" height="88" rx="6"/><text class="tag" x="336.0" y="563" text-anchor="middle">ARTIFACT</text><text class="node-name" x="336.0" y="591.0" text-anchor="middle">Data &amp; checkpoints</text><text class="node-sub" x="336.0" y="609.0" text-anchor="middle">paths.* references</text></g><g class="node " id="config-install" data-node="install" data-label="Package installation"><rect class="node-box" x="744" y="128" width="200" height="88" rx="6"/><text class="tag" x="844.0" y="147" text-anchor="middle">BUILD</text><text class="node-name" x="844.0" y="175.0" text-anchor="middle">Package installation</text><text class="node-sub" x="844.0" y="193.0" text-anchor="middle">pip install .</text></g><g class="node " id="config-environment" data-node="environment" data-label="Environment builder"><rect class="node-box" x="1048" y="128" width="192" height="88" rx="6"/><text class="tag" x="1144.0" y="147" text-anchor="middle">BUILD</text><text class="node-name" x="1144.0" y="175.0" text-anchor="middle">Environment builder</text><text class="node-sub" x="1144.0" y="193.0" text-anchor="middle">adds unpinned extras</text></g><g class="node " id="config-metadata" data-node="metadata" data-label="Project metadata"><rect class="node-box" x="744" y="344" width="200" height="88" rx="6"/><text class="tag" x="844.0" y="363" text-anchor="middle">METADATA</text><text class="node-name" x="844.0" y="391.0" text-anchor="middle">Project metadata</text><text class="node-sub" x="844.0" y="409.0" text-anchor="middle">pyproject.toml</text></g><g class="node artifact" id="config-pins" data-node="pins" data-label="Direct dependency pins"><rect class="node-box" x="1048" y="344" width="192" height="88" rx="6"/><text class="tag" x="1144.0" y="363" text-anchor="middle">REQUIREMENTS</text><text class="node-name" x="1144.0" y="391.0" text-anchor="middle">Direct dependency pins</text><text class="node-sub" x="1144.0" y="409.0" text-anchor="middle">CausalEstimate==0.13.0</text></g></svg></div><details class="evidence"><summary>View source references</summary><p>Code evidence: BONSAI Causal <code>d97b5e9b83c0a3962494441542db9e7bbccef881</code>; CausalEstimate 0.13.0 <code>9193d476c58037fba7f4d047d03a577e84b6348e</code>.</p><ul><li>YAML loading and config objects — <code>corebehrt/modules/setup/config.py</code></li><li>Azure job config and path overrides — <code>corebehrt/azure/util/job.py</code></li><li>Example stage paths and settings — <code>corebehrt/configs/causal/finetune/simple.yaml</code></li><li>Direct version pins — <code>requirements.txt</code></li><li>Dynamic package dependencies — <code>pyproject.toml</code></li><li>Azure environment and unpinned additions — <code>corebehrt/azure/environment.py</code></li></ul><a href="evidence.html">Open revision-pinned source links ↗</a></details></main></div></body></html>

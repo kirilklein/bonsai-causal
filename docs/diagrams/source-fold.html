@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>finetune_fold() · BONSAI Causal</title><style>
+:root {
+  color-scheme: light;
+  --paper: #f7fafb;
+  --ink: #041228;
+  --muted: #4b586e;
+  --rule: #c3cad4;
+  --accent: #35b2bf;
+  --accent-text: #1f7f89;
+  --sans: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--paper);
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+a {
+  color: inherit;
+  text-underline-offset: 4px;
+}
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+[hidden] {
+  display: none !important;
+}
+.shell {
+  max-width: 1360px;
+  margin: auto;
+  padding: 28px 40px 40px;
+}
+.brand {
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.18em;
+  text-decoration: none;
+}
+.brand span {
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  margin-left: 8px;
+  color: var(--muted);
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 64px;
+  margin-top: 12px;
+}
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.breadcrumbs button,
+.nav-button {
+  border: 0;
+  background: transparent;
+  padding: 12px 8px;
+  min-height: 44px;
+}
+.breadcrumbs button {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.breadcrumbs span {
+  padding: 8px;
+}
+.nav-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.nav-button {
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 8px 14px;
+}
+.context {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  margin: 8px 0 16px;
+}
+.context[hidden] + main {
+  margin-top: 16px;
+}
+.context-anchor {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 220px;
+  min-height: 56px;
+  padding: 8px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: #e5f3f6;
+}
+.context-anchor small {
+  color: var(--muted);
+  font-size: 10px;
+  margin-bottom: 4px;
+}
+.context-anchor strong {
+  font-weight: 600;
+  font-size: 12px;
+}
+h1 {
+  font-size: 28px;
+  font-weight: 300;
+  letter-spacing: -0.025em;
+  margin: 0 0 10px;
+}
+.subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.6;
+  max-width: 85ch;
+}
+.diagram-scroll {
+  overflow-x: auto;
+  margin-top: 12px;
+  border-radius: 4px;
+}
+.diagram {
+  width: 100%;
+  display: block;
+  min-width: 880px;
+}
+.node-name {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+.node-sub {
+  font-family: var(--mono);
+  font-size: 9px;
+  fill: var(--muted);
+}
+.tag,
+.edge-label,
+.lane-label {
+  font-family: var(--mono);
+  font-size: 8px;
+  fill: var(--muted);
+  letter-spacing: 0.08em;
+}
+.lane-label {
+  font-size: 10px;
+}
+.node-box {
+  fill: #fff;
+  stroke: #718093;
+  stroke-width: 1;
+}
+.node.focal .node-box {
+  fill: #e5f3f6;
+  stroke: var(--accent);
+  stroke-width: 1.2;
+}
+.node.artifact .node-box {
+  fill: #ebeff2;
+}
+.node.external .node-box {
+  fill: #eff3f5;
+  stroke-dasharray: 4 3;
+}
+.node-link {
+  cursor: pointer;
+  text-decoration: none;
+}
+.node-link:hover .node-box {
+  stroke: var(--ink);
+  stroke-width: 1.8;
+}
+.disclosure {
+  font-family: var(--sans);
+  font-size: 12px;
+  fill: var(--accent-text);
+}
+.related {
+  font-family: var(--sans);
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  fill: var(--muted);
+}
+.evidence {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.evidence summary {
+  cursor: pointer;
+  width: fit-content;
+  padding: 12px 0;
+}
+.evidence ul {
+  line-height: 1.8;
+  padding-left: 20px;
+}
+.evidence code,
+.source-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.source-meta {
+  color: var(--muted);
+  line-height: 1.8;
+}
+pre {
+  overflow: auto;
+  max-height: 65vh;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 24px;
+  line-height: 1.65;
+  font-size: 12px;
+  tab-size: 4;
+}
+pre code {
+  font-family: var(--mono);
+}
+:focus-visible {
+  outline: 3px solid var(--accent-text);
+  outline-offset: 5px;
+}
+.node-link:focus-visible {
+  outline: none;
+}
+.node-link:focus-visible .node-box {
+  stroke: var(--accent-text);
+  stroke-width: 3;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.flight {
+  position: fixed;
+  pointer-events: none;
+  z-index: 10;
+  margin: 0;
+  transform-origin: top left;
+}
+.flight {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  font-size: 12px;
+  padding: 8px 12px;
+  text-align: center;
+}
+.flight strong {
+  font-weight: 600;
+}
+.standalone-nav {
+  display: flex;
+  gap: 20px;
+  font-size: 12px;
+  margin: 24px 0;
+}
+@media (max-width: 640px) {
+  .shell {
+    padding: 20px 16px;
+  }
+  .toolbar {
+    align-items: flex-start;
+    flex-direction: column-reverse;
+    gap: 0;
+  }
+  .breadcrumbs {
+    font-size: 11px;
+  }
+  h1 {
+    font-size: 24px;
+    line-height: 1.25;
+  }
+  .subtitle {
+    font-size: 13px;
+  }
+  .diagram-scroll {
+    border: 1px solid #dce2e8;
+  }
+  .diagram {
+    min-width: 1280px;
+  }
+  .context-anchor {
+    min-width: 200px;
+  }
+  pre {
+    padding: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media print {
+  .toolbar,
+  .context,
+  .evidence,
+  .standalone-nav {
+    display: none !important;
+  }
+  .shell {
+    padding: 0;
+    max-width: none;
+  }
+  .diagram {
+    min-width: 0;
+  }
+  .diagram-scroll {
+    overflow: visible;
+    border: 0;
+  }
+  .brand {
+    display: none;
+  }
+}
+
+</style></head><body><div class="shell"><a class="brand" href="index.html">BONSAI <span>Causal / architecture</span></a><nav class="standalone-nav" aria-label="Document"><a href="fold.html">Up</a><a href="index.html">Overview</a></nav><main><h1 tabindex="-1">finetune_fold()</h1><p class="source-meta">corebehrt/main_causal/helper/finetune_exp_y.py · lines 59–166<br>Revision d97b5e9b83c0a3962494441542db9e7bbccef881</p><pre tabindex="0" aria-label="finetune_fold() source code"><code>def finetune_fold(
+    cfg,
+    logger: logging.Logger,
+    finetune_folder: str,
+    train_data: CausalPatientDataset,
+    val_data: CausalPatientDataset,
+    fold: int,
+    test_data: CausalPatientDataset = None,
+) -&gt; None:
+    &quot;&quot;&quot;Finetune model on one fold&quot;&quot;&quot;
+    if &quot;scheduler&quot; in cfg:
+        logger.info(&quot;Replacing steps with epochs in scheduler config&quot;)
+        cfg.scheduler = replace_steps_with_epochs(
+            cfg.scheduler, cfg.trainer_args.batch_size, len(train_data)
+        )
+
+    fold_folder = join(finetune_folder, f&quot;fold_{fold}&quot;)
+    os.makedirs(fold_folder, exist_ok=True)
+    os.makedirs(join(fold_folder, &quot;checkpoints&quot;), exist_ok=True)
+
+    logger.info(&quot;Saving pids&quot;)
+    torch.save(train_data.get_pids(), join(fold_folder, &quot;train_pids.pt&quot;))
+    torch.save(val_data.get_pids(), join(fold_folder, &quot;val_pids.pt&quot;))
+    if len(test_data) &gt; 0:
+        torch.save(test_data.get_pids(), join(fold_folder, &quot;test_pids.pt&quot;))
+
+    logger.info(&quot;Initializing datasets&quot;)
+
+    train_dataset = ExposureOutcomesDataset(train_data.patients)
+    val_dataset = ExposureOutcomesDataset(val_data.patients)
+
+    modelmanager = CausalModelManager(cfg, fold)
+    checkpoint = modelmanager.load_checkpoint()
+    outcomes: Dict[str, List[int]] = (
+        train_data.get_outcomes()
+    )  # needed for sampler/ can be made optional
+    exposures = train_data.get_exposures()
+    model = modelmanager.initialize_finetune_model(checkpoint, outcomes, exposures)
+
+    if cfg.model.get(&quot;initialize_sigmoid_bias&quot;, False):
+        model = initialize_sigmoid_bias(model, outcomes, exposures, logger)
+
+    optimizer, sampler, scheduler, cfg = modelmanager.initialize_training_components(
+        model, outcomes
+    )
+    epoch = modelmanager.get_epoch()
+    trainer = CausalEHRTrainer(
+        model=model,
+        optimizer=optimizer,
+        train_dataset=train_dataset,
+        val_dataset=val_dataset,
+        test_dataset=None,  # test only after training
+        args=cfg.trainer_args,
+        metrics=getattr(cfg, &quot;metrics&quot;, {}),
+        sampler=sampler,
+        scheduler=scheduler,
+        cfg=cfg,
+        logger=logger,
+        accumulate_logits=True,
+        run_folder=fold_folder,
+        last_epoch=epoch,
+    )
+    trainer.train()
+
+    logger.info(&quot;Load best finetuned model to compute test scores&quot;)
+    modelmanager_trained = CausalModelManager(cfg, fold)
+    checkpoint = modelmanager_trained.load_checkpoint(checkpoints=True)
+    model = modelmanager_trained.initialize_finetune_model(
+        checkpoint, outcomes, exposures
+    )
+
+    if cfg.get(&quot;visualize_weight_distributions&quot;, False):
+        fold_folder = Path(fold_folder)
+        visualize_weight_distributions(
+            model, save_dir=fold_folder.parent / &quot;figs&quot; / fold_folder.name
+        )
+
+    trainer.model = model
+    trainer.val_dataset = val_dataset
+
+    logger.info(&quot;Evaluating on validation set&quot;)
+    *_, val_prediction_data = trainer.evaluate(mode=&quot;val&quot;)
+    if val_prediction_data is not None:
+        trainer.process_causal_classification_results(
+            val_prediction_data, mode=&quot;val&quot;, save_results=True
+        )
+
+    if test_data and len(test_data) &gt; 0:
+        logger.info(&quot;Evaluating on test set&quot;)
+        test_dataset = ExposureOutcomesDataset(test_data.patients)
+        trainer.test_dataset = test_dataset
+        *_, test_prediction_data = trainer.evaluate(mode=&quot;test&quot;)
+        if test_prediction_data is not None:
+            trainer.process_causal_classification_results(
+                test_prediction_data, mode=&quot;test&quot;, save_results=True
+            )
+
+    if cfg.get(&quot;save_encodings&quot;, False):
+        fold_folder = Path(fold_folder)
+        encoding_dir = fold_folder / &quot;encodings&quot;
+        EncodingSaver(model, val_dataset, train_data.vocab, encoding_dir).save()
+        if cfg.get(&quot;visualize_encodings&quot;, False):
+            try:
+                EncodingAnalyzer(
+                    encoding_dir, fold_folder.parent / &quot;figs&quot; / encoding_dir.name
+                ).analyze()
+            except Exception as e:
+                logger.exception(f&quot;Failed to visualize encodings: {e}&quot;)</code></pre><p class="evidence"><a href="evidence.html">Open revision-pinned source links ↗</a></p></main></div></body></html>

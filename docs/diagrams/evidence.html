@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Source evidence · BONSAI Causal</title><style>
+:root {
+  color-scheme: light;
+  --paper: #f7fafb;
+  --ink: #041228;
+  --muted: #4b586e;
+  --rule: #c3cad4;
+  --accent: #35b2bf;
+  --accent-text: #1f7f89;
+  --sans: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--paper);
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+a {
+  color: inherit;
+  text-underline-offset: 4px;
+}
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+[hidden] {
+  display: none !important;
+}
+.shell {
+  max-width: 1360px;
+  margin: auto;
+  padding: 28px 40px 40px;
+}
+.brand {
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.18em;
+  text-decoration: none;
+}
+.brand span {
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  margin-left: 8px;
+  color: var(--muted);
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 64px;
+  margin-top: 12px;
+}
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.breadcrumbs button,
+.nav-button {
+  border: 0;
+  background: transparent;
+  padding: 12px 8px;
+  min-height: 44px;
+}
+.breadcrumbs button {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.breadcrumbs span {
+  padding: 8px;
+}
+.nav-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.nav-button {
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 8px 14px;
+}
+.context {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  margin: 8px 0 16px;
+}
+.context[hidden] + main {
+  margin-top: 16px;
+}
+.context-anchor {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 220px;
+  min-height: 56px;
+  padding: 8px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: #e5f3f6;
+}
+.context-anchor small {
+  color: var(--muted);
+  font-size: 10px;
+  margin-bottom: 4px;
+}
+.context-anchor strong {
+  font-weight: 600;
+  font-size: 12px;
+}
+h1 {
+  font-size: 28px;
+  font-weight: 300;
+  letter-spacing: -0.025em;
+  margin: 0 0 10px;
+}
+.subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.6;
+  max-width: 85ch;
+}
+.diagram-scroll {
+  overflow-x: auto;
+  margin-top: 12px;
+  border-radius: 4px;
+}
+.diagram {
+  width: 100%;
+  display: block;
+  min-width: 880px;
+}
+.node-name {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+.node-sub {
+  font-family: var(--mono);
+  font-size: 9px;
+  fill: var(--muted);
+}
+.tag,
+.edge-label,
+.lane-label {
+  font-family: var(--mono);
+  font-size: 8px;
+  fill: var(--muted);
+  letter-spacing: 0.08em;
+}
+.lane-label {
+  font-size: 10px;
+}
+.node-box {
+  fill: #fff;
+  stroke: #718093;
+  stroke-width: 1;
+}
+.node.focal .node-box {
+  fill: #e5f3f6;
+  stroke: var(--accent);
+  stroke-width: 1.2;
+}
+.node.artifact .node-box {
+  fill: #ebeff2;
+}
+.node.external .node-box {
+  fill: #eff3f5;
+  stroke-dasharray: 4 3;
+}
+.node-link {
+  cursor: pointer;
+  text-decoration: none;
+}
+.node-link:hover .node-box {
+  stroke: var(--ink);
+  stroke-width: 1.8;
+}
+.disclosure {
+  font-family: var(--sans);
+  font-size: 12px;
+  fill: var(--accent-text);
+}
+.related {
+  font-family: var(--sans);
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  fill: var(--muted);
+}
+.evidence {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.evidence summary {
+  cursor: pointer;
+  width: fit-content;
+  padding: 12px 0;
+}
+.evidence ul {
+  line-height: 1.8;
+  padding-left: 20px;
+}
+.evidence code,
+.source-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.source-meta {
+  color: var(--muted);
+  line-height: 1.8;
+}
+pre {
+  overflow: auto;
+  max-height: 65vh;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 24px;
+  line-height: 1.65;
+  font-size: 12px;
+  tab-size: 4;
+}
+pre code {
+  font-family: var(--mono);
+}
+:focus-visible {
+  outline: 3px solid var(--accent-text);
+  outline-offset: 5px;
+}
+.node-link:focus-visible {
+  outline: none;
+}
+.node-link:focus-visible .node-box {
+  stroke: var(--accent-text);
+  stroke-width: 3;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.flight {
+  position: fixed;
+  pointer-events: none;
+  z-index: 10;
+  margin: 0;
+  transform-origin: top left;
+}
+.flight {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  font-size: 12px;
+  padding: 8px 12px;
+  text-align: center;
+}
+.flight strong {
+  font-weight: 600;
+}
+.standalone-nav {
+  display: flex;
+  gap: 20px;
+  font-size: 12px;
+  margin: 24px 0;
+}
+@media (max-width: 640px) {
+  .shell {
+    padding: 20px 16px;
+  }
+  .toolbar {
+    align-items: flex-start;
+    flex-direction: column-reverse;
+    gap: 0;
+  }
+  .breadcrumbs {
+    font-size: 11px;
+  }
+  h1 {
+    font-size: 24px;
+    line-height: 1.25;
+  }
+  .subtitle {
+    font-size: 13px;
+  }
+  .diagram-scroll {
+    border: 1px solid #dce2e8;
+  }
+  .diagram {
+    min-width: 1280px;
+  }
+  .context-anchor {
+    min-width: 200px;
+  }
+  pre {
+    padding: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media print {
+  .toolbar,
+  .context,
+  .evidence,
+  .standalone-nav {
+    display: none !important;
+  }
+  .shell {
+    padding: 0;
+    max-width: none;
+  }
+  .diagram {
+    min-width: 0;
+  }
+  .diagram-scroll {
+    overflow: visible;
+    border: 0;
+  }
+  .brand {
+    display: none;
+  }
+}
+
+</style></head><body><div class="shell"><a class="brand" href="index.html">BONSAI <span>Causal / architecture</span></a><main><h1>Source evidence</h1><p>Code inspection at fixed revisions; this document does not claim a runtime or statistical validation.</p><p class="source-meta">BONSAI Causal d97b5e9b83c0a3962494441542db9e7bbccef881<br>CausalEstimate 0.13.0 9193d476c58037fba7f4d047d03a577e84b6348e</p><h2>Overview</h2><ul><li><a href="https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/.github/workflows/causal_pipeline.yml">Local pipeline entry points</a></li><li><a href="https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/azure/pipelines/FINETUNE_CALIBRATE_ESTIMATE.py">Azure artifact wiring</a></li><li><a href="https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/modules/causal/estimate.py">Estimator caller and table contract</a></li><li><a href="https://github.com/kirilklein/CausalEstimate/blob/9193d476c58037fba7f4d047d03a577e84b6348e/CausalEstimate/core/multi_estimator.py">CausalEstimate 0.13.0 callee</a></li></ul><h2>One analysis</h2><ul><li><a href="https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/.github/workflows/causal_pipeline.yml">Concrete stage ordering</a></li><li><a href="https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/main_causal/finetune_exp_y.py">Joint fine-tuning entry point</a></li><li><a href="https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/modules/setup/causal/prediction_processor.py">Calibration reads saved predictions</a></li><li><a href="https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/azure/pipelines/FINETUNE_CALIBRATE_ESTIMATE.py">Azure uses the same artifact chain</a></li></ul><h2>One fold</h2><ul><li><a href="https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/main_causal/helper/finetune_exp_y.py">Training, reload and evaluation</a></li><li><a href="https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/modules/trainer/causal/trainer.py">Factual and counterfactual prediction</a></li><li><a href="https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/modules/setup/causal/prediction_accumulator.py">Only validation folds are accumulated</a></li></ul><h2>Effect estimates</h2><ul><li><a href="https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/modules/causal/estimate.py">Outcome loop and estimator dispatch</a></li><li><a href="https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/functional/estimate/data_handler.py">Named columns become potential-outcome predictions</a></li><li><a href="https://github.com/kirilklein/CausalEstimate/blob/9193d476c58037fba7f4d047d03a577e84b6348e/CausalEstimate/core/multi_estimator.py">Bootstrap versus single evaluation</a></li><li><a href="https://github.com/kirilklein/CausalEstimate/blob/9193d476c58037fba7f4d047d03a577e84b6348e/CausalEstimate/estimators/tmle.py">Pinned TMLE API</a></li></ul><h2>Configuration &amp; versions</h2><ul><li><a href="https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/modules/setup/config.py">YAML loading and config objects</a></li><li><a href="https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/azure/util/job.py">Azure job config and path overrides</a></li><li><a href="https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/configs/causal/finetune/simple.yaml">Example stage paths and settings</a></li><li><a href="https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/requirements.txt">Direct version pins</a></li><li><a href="https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/pyproject.toml">Dynamic package dependencies</a></li><li><a href="https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/azure/environment.py">Azure environment and unpinned additions</a></li></ul></main></div></body></html>

@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>What does BONSAI Causal do? · BONSAI Causal</title><style>
+:root {
+  color-scheme: light;
+  --paper: #f7fafb;
+  --ink: #041228;
+  --muted: #4b586e;
+  --rule: #c3cad4;
+  --accent: #35b2bf;
+  --accent-text: #1f7f89;
+  --sans: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--paper);
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+a {
+  color: inherit;
+  text-underline-offset: 4px;
+}
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+[hidden] {
+  display: none !important;
+}
+.shell {
+  max-width: 1360px;
+  margin: auto;
+  padding: 28px 40px 40px;
+}
+.brand {
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.18em;
+  text-decoration: none;
+}
+.brand span {
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  margin-left: 8px;
+  color: var(--muted);
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 64px;
+  margin-top: 12px;
+}
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.breadcrumbs button,
+.nav-button {
+  border: 0;
+  background: transparent;
+  padding: 12px 8px;
+  min-height: 44px;
+}
+.breadcrumbs button {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.breadcrumbs span {
+  padding: 8px;
+}
+.nav-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.nav-button {
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 8px 14px;
+}
+.context {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  margin: 8px 0 16px;
+}
+.context[hidden] + main {
+  margin-top: 16px;
+}
+.context-anchor {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 220px;
+  min-height: 56px;
+  padding: 8px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: #e5f3f6;
+}
+.context-anchor small {
+  color: var(--muted);
+  font-size: 10px;
+  margin-bottom: 4px;
+}
+.context-anchor strong {
+  font-weight: 600;
+  font-size: 12px;
+}
+h1 {
+  font-size: 28px;
+  font-weight: 300;
+  letter-spacing: -0.025em;
+  margin: 0 0 10px;
+}
+.subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.6;
+  max-width: 85ch;
+}
+.diagram-scroll {
+  overflow-x: auto;
+  margin-top: 12px;
+  border-radius: 4px;
+}
+.diagram {
+  width: 100%;
+  display: block;
+  min-width: 880px;
+}
+.node-name {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+.node-sub {
+  font-family: var(--mono);
+  font-size: 9px;
+  fill: var(--muted);
+}
+.tag,
+.edge-label,
+.lane-label {
+  font-family: var(--mono);
+  font-size: 8px;
+  fill: var(--muted);
+  letter-spacing: 0.08em;
+}
+.lane-label {
+  font-size: 10px;
+}
+.node-box {
+  fill: #fff;
+  stroke: #718093;
+  stroke-width: 1;
+}
+.node.focal .node-box {
+  fill: #e5f3f6;
+  stroke: var(--accent);
+  stroke-width: 1.2;
+}
+.node.artifact .node-box {
+  fill: #ebeff2;
+}
+.node.external .node-box {
+  fill: #eff3f5;
+  stroke-dasharray: 4 3;
+}
+.node-link {
+  cursor: pointer;
+  text-decoration: none;
+}
+.node-link:hover .node-box {
+  stroke: var(--ink);
+  stroke-width: 1.8;
+}
+.disclosure {
+  font-family: var(--sans);
+  font-size: 12px;
+  fill: var(--accent-text);
+}
+.related {
+  font-family: var(--sans);
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  fill: var(--muted);
+}
+.evidence {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.evidence summary {
+  cursor: pointer;
+  width: fit-content;
+  padding: 12px 0;
+}
+.evidence ul {
+  line-height: 1.8;
+  padding-left: 20px;
+}
+.evidence code,
+.source-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.source-meta {
+  color: var(--muted);
+  line-height: 1.8;
+}
+pre {
+  overflow: auto;
+  max-height: 65vh;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 24px;
+  line-height: 1.65;
+  font-size: 12px;
+  tab-size: 4;
+}
+pre code {
+  font-family: var(--mono);
+}
+:focus-visible {
+  outline: 3px solid var(--accent-text);
+  outline-offset: 5px;
+}
+.node-link:focus-visible {
+  outline: none;
+}
+.node-link:focus-visible .node-box {
+  stroke: var(--accent-text);
+  stroke-width: 3;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.flight {
+  position: fixed;
+  pointer-events: none;
+  z-index: 10;
+  margin: 0;
+  transform-origin: top left;
+}
+.flight {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  font-size: 12px;
+  padding: 8px 12px;
+  text-align: center;
+}
+.flight strong {
+  font-weight: 600;
+}
+.standalone-nav {
+  display: flex;
+  gap: 20px;
+  font-size: 12px;
+  margin: 24px 0;
+}
+@media (max-width: 640px) {
+  .shell {
+    padding: 20px 16px;
+  }
+  .toolbar {
+    align-items: flex-start;
+    flex-direction: column-reverse;
+    gap: 0;
+  }
+  .breadcrumbs {
+    font-size: 11px;
+  }
+  h1 {
+    font-size: 24px;
+    line-height: 1.25;
+  }
+  .subtitle {
+    font-size: 13px;
+  }
+  .diagram-scroll {
+    border: 1px solid #dce2e8;
+  }
+  .diagram {
+    min-width: 1280px;
+  }
+  .context-anchor {
+    min-width: 200px;
+  }
+  pre {
+    padding: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media print {
+  .toolbar,
+  .context,
+  .evidence,
+  .standalone-nav {
+    display: none !important;
+  }
+  .shell {
+    padding: 0;
+    max-width: none;
+  }
+  .diagram {
+    min-width: 0;
+  }
+  .diagram-scroll {
+    overflow: visible;
+    border: 0;
+  }
+  .brand {
+    display: none;
+  }
+}
+
+</style></head><body><div class="shell"><a class="brand" href="index.html">BONSAI <span>Causal / architecture</span></a><nav class="standalone-nav" aria-label="Document"><a href="index.html">Open interactive overview</a></nav><main><h1 tabindex="-1">What does BONSAI Causal do?</h1><p class="subtitle">A batch analysis turns patient histories into exposure-effect estimates.</p><div class="diagram-scroll" tabindex="0" role="region" aria-label="Scrollable diagram: Overview"><svg class="diagram" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-labelledby="overview-title overview-desc"><title id="overview-title">What does BONSAI Causal do?</title><desc id="overview-desc">Local commands or Azure jobs run causal analysis on MEDS data. The analysis calls CausalEstimate with prediction tables and saves effect estimates and diagnostics.</desc><defs><marker id="overview-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4b586e"/></marker><marker id="overview-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#35b2bf"/></marker><marker id="overview-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker></defs><rect width="1280" height="720" fill="#f7fafb"/><path class="connector" d="M 288 188 L 360.0 188.0 Q 368 188 368.0 196.0 L 368.0 308.0 Q 368 316 376.0 316.0 L 480 316" fill="none" stroke="#4b586e" stroke-width="1.2" marker-end="url(#overview-arrow)"/><path class="connector" d="M 288 356 L 480 356" fill="none" stroke="#4b586e" stroke-width="1.2" marker-end="url(#overview-arrow)"/><path class="connector" d="M 288 524 L 392.0 524.0 Q 400 524 400.0 516.0 L 400.0 404.0 Q 400 396 408.0 396.0 L 480 396" fill="none" stroke="#4b586e" stroke-width="1.2" marker-end="url(#overview-arrow)"/><path class="connector" d="M 752 316 L 944 316" fill="none" stroke="#4b586e" stroke-width="1.2" marker-end="url(#overview-arrow)"/><path class="connector" d="M 944 380 L 752 380" fill="none" stroke="#4b586e" stroke-width="1.2" marker-end="url(#overview-arrow)"/><path class="connector" d="M 616 416 L 616.0 548.0 Q 616 556 624.0 556.0 L 944 556" fill="none" stroke="#4b586e" stroke-width="1.2" marker-end="url(#overview-arrow)"/><g class="edge-caption"><rect x="405.6" y="287" width="36.8" height="16" fill="#f7fafb"/><text class="edge-label" x="424" y="298" text-anchor="middle">RUNS</text></g><g class="edge-caption"><rect x="353.6" y="327" width="36.8" height="16" fill="#f7fafb"/><text class="edge-label" x="372" y="338" text-anchor="middle">RUNS</text></g><g class="edge-caption"><rect x="327.2" y="495" width="57.6" height="16" fill="#f7fafb"/><text class="edge-label" x="356" y="506" text-anchor="middle">SUPPLIES</text></g><g class="edge-caption"><rect x="798.4" y="287" width="99.2" height="16" fill="#f7fafb"/><text class="edge-label" x="848" y="298" text-anchor="middle">PREDICTION TABLE</text></g><g class="edge-caption"><rect x="808.8" y="351" width="78.4" height="16" fill="#f7fafb"/><text class="edge-label" x="848" y="362" text-anchor="middle">RESULT DICTS</text></g><g class="edge-caption"><rect x="771.0" y="527" width="42.0" height="16" fill="#f7fafb"/><text class="edge-label" x="792" y="538" text-anchor="middle">SAVES</text></g><g class="node " id="overview-local" data-node="local" data-label="Local commands"><rect class="node-box" x="80" y="144" width="208" height="88" rx="6"/><text class="tag" x="184.0" y="163" text-anchor="middle">ENTRY</text><text class="node-name" x="184.0" y="191.0" text-anchor="middle">Local commands</text><text class="node-sub" x="184.0" y="209.0" text-anchor="middle">python -m corebehrt…</text></g><g class="node " id="overview-azure" data-node="azure" data-label="Azure ML jobs"><rect class="node-box" x="80" y="312" width="208" height="88" rx="6"/><text class="tag" x="184.0" y="331" text-anchor="middle">ENTRY</text><text class="node-name" x="184.0" y="359.0" text-anchor="middle">Azure ML jobs</text><text class="node-sub" x="184.0" y="377.0" text-anchor="middle">pipeline components</text></g><g class="node artifact" id="overview-meds" data-node="meds" data-label="Patient histories"><rect class="node-box" x="80" y="480" width="208" height="88" rx="6"/><text class="tag" x="184.0" y="499" text-anchor="middle">INPUT</text><text class="node-name" x="184.0" y="527.0" text-anchor="middle">Patient histories</text><text class="node-sub" x="184.0" y="545.0" text-anchor="middle">MEDS shards</text></g><a class="node-link" href="analysis.html" data-destination="analysis" data-kind="inside" aria-label="Look inside: Causal analysis"><g class="node focal" id="overview-analysis" data-node="analysis" data-label="Causal analysis"><rect class="node-box" x="480" y="288" width="272" height="128" rx="6"/><text class="tag" x="616.0" y="307" text-anchor="middle">BONSAI CAUSAL</text><text class="node-name" x="616.0" y="355.0" text-anchor="middle">Causal analysis</text><text class="node-sub" x="616.0" y="373.0" text-anchor="middle">prepare · predict · estimate</text><text class="disclosure" x="734" y="308" text-anchor="middle">+</text></g></a><g class="node external" id="overview-estimators" data-node="estimators" data-label="CausalEstimate"><rect class="node-box" x="944" y="272" width="208" height="144" rx="6"/><text class="tag" x="1048.0" y="291" text-anchor="middle">DEPENDENCY</text><text class="node-name" x="1048.0" y="347.0" text-anchor="middle">CausalEstimate</text><text class="node-sub" x="1048.0" y="365.0" text-anchor="middle">0.13.0 · Python library</text></g><g class="node artifact" id="overview-results" data-node="results" data-label="Effects &amp; diagnostics"><rect class="node-box" x="944" y="512" width="208" height="88" rx="6"/><text class="tag" x="1048.0" y="531" text-anchor="middle">OUTPUT</text><text class="node-name" x="1048.0" y="559.0" text-anchor="middle">Effects &amp; diagnostics</text><text class="node-sub" x="1048.0" y="577.0" text-anchor="middle">CSV tables + figures</text></g><a href="config.html" data-destination="config" data-kind="related" class="related-link" aria-label="Related view: Run configuration &amp; versions"><rect x="72" y="620" width="280" height="44" fill="transparent"/><text class="related" x="80" y="648">Run configuration &amp; versions ↗</text></a></svg></div><details class="evidence"><summary>View source references</summary><p>Code evidence: BONSAI Causal <code>d97b5e9b83c0a3962494441542db9e7bbccef881</code>; CausalEstimate 0.13.0 <code>9193d476c58037fba7f4d047d03a577e84b6348e</code>.</p><ul><li>Local pipeline entry points — <code>.github/workflows/causal_pipeline.yml</code></li><li>Azure artifact wiring — <code>corebehrt/azure/pipelines/FINETUNE_CALIBRATE_ESTIMATE.py</code></li><li>Estimator caller and table contract — <code>corebehrt/modules/causal/estimate.py</code></li><li>CausalEstimate 0.13.0 callee — <code>9193d476c58037fba7f4d047d03a577e84b6348e/CausalEstimate/core/multi_estimator.py</code></li></ul><a href="evidence.html">Open revision-pinned source links ↗</a></details></main></div></body></html>

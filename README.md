@@ -49,6 +49,8 @@ python -m corebehrt.main_causal.estimate            --config_path $C/estimate.ya
 
 Effect estimates land in `outputs/causal/estimate/simple/` as a CSV with one row per method and outcome.
 
+Explore the [logical architecture diagrams](docs/diagrams/README.md) for an interactive path from the analysis overview to training, estimation, and source code, with PNG previews for GitHub.
+
 <p align="center">
   <img src="docs/causal_COREBEHRT_overview.jpg" alt="Causal pipeline overview" width="820">
 </p>

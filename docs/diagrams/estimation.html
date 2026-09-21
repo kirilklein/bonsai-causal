@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>How do predictions become effect estimates? · BONSAI Causal</title><style>
+:root {
+  color-scheme: light;
+  --paper: #f7fafb;
+  --ink: #041228;
+  --muted: #4b586e;
+  --rule: #c3cad4;
+  --accent: #35b2bf;
+  --accent-text: #1f7f89;
+  --sans: "Geist", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-family: var(--sans);
+  color: var(--ink);
+  background: var(--paper);
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+a {
+  color: inherit;
+  text-underline-offset: 4px;
+}
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+[hidden] {
+  display: none !important;
+}
+.shell {
+  max-width: 1360px;
+  margin: auto;
+  padding: 28px 40px 40px;
+}
+.brand {
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.18em;
+  text-decoration: none;
+}
+.brand span {
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  margin-left: 8px;
+  color: var(--muted);
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 64px;
+  margin-top: 12px;
+}
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.breadcrumbs button,
+.nav-button {
+  border: 0;
+  background: transparent;
+  padding: 12px 8px;
+  min-height: 44px;
+}
+.breadcrumbs button {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.breadcrumbs span {
+  padding: 8px;
+}
+.nav-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.nav-button {
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 8px 14px;
+}
+.context {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  margin: 8px 0 16px;
+}
+.context[hidden] + main {
+  margin-top: 16px;
+}
+.context-anchor {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 220px;
+  min-height: 56px;
+  padding: 8px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: #e5f3f6;
+}
+.context-anchor small {
+  color: var(--muted);
+  font-size: 10px;
+  margin-bottom: 4px;
+}
+.context-anchor strong {
+  font-weight: 600;
+  font-size: 12px;
+}
+h1 {
+  font-size: 28px;
+  font-weight: 300;
+  letter-spacing: -0.025em;
+  margin: 0 0 10px;
+}
+.subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.6;
+  max-width: 85ch;
+}
+.diagram-scroll {
+  overflow-x: auto;
+  margin-top: 12px;
+  border-radius: 4px;
+}
+.diagram {
+  width: 100%;
+  display: block;
+  min-width: 880px;
+}
+.node-name {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--ink);
+}
+.node-sub {
+  font-family: var(--mono);
+  font-size: 9px;
+  fill: var(--muted);
+}
+.tag,
+.edge-label,
+.lane-label {
+  font-family: var(--mono);
+  font-size: 8px;
+  fill: var(--muted);
+  letter-spacing: 0.08em;
+}
+.lane-label {
+  font-size: 10px;
+}
+.node-box {
+  fill: #fff;
+  stroke: #718093;
+  stroke-width: 1;
+}
+.node.focal .node-box {
+  fill: #e5f3f6;
+  stroke: var(--accent);
+  stroke-width: 1.2;
+}
+.node.artifact .node-box {
+  fill: #ebeff2;
+}
+.node.external .node-box {
+  fill: #eff3f5;
+  stroke-dasharray: 4 3;
+}
+.node-link {
+  cursor: pointer;
+  text-decoration: none;
+}
+.node-link:hover .node-box {
+  stroke: var(--ink);
+  stroke-width: 1.8;
+}
+.disclosure {
+  font-family: var(--sans);
+  font-size: 12px;
+  fill: var(--accent-text);
+}
+.related {
+  font-family: var(--sans);
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  fill: var(--muted);
+}
+.evidence {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.evidence summary {
+  cursor: pointer;
+  width: fit-content;
+  padding: 12px 0;
+}
+.evidence ul {
+  line-height: 1.8;
+  padding-left: 20px;
+}
+.evidence code,
+.source-meta {
+  font-family: var(--mono);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.source-meta {
+  color: var(--muted);
+  line-height: 1.8;
+}
+pre {
+  overflow: auto;
+  max-height: 65vh;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 24px;
+  line-height: 1.65;
+  font-size: 12px;
+  tab-size: 4;
+}
+pre code {
+  font-family: var(--mono);
+}
+:focus-visible {
+  outline: 3px solid var(--accent-text);
+  outline-offset: 5px;
+}
+.node-link:focus-visible {
+  outline: none;
+}
+.node-link:focus-visible .node-box {
+  stroke: var(--accent-text);
+  stroke-width: 3;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.flight {
+  position: fixed;
+  pointer-events: none;
+  z-index: 10;
+  margin: 0;
+  transform-origin: top left;
+}
+.flight {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  font-size: 12px;
+  padding: 8px 12px;
+  text-align: center;
+}
+.flight strong {
+  font-weight: 600;
+}
+.standalone-nav {
+  display: flex;
+  gap: 20px;
+  font-size: 12px;
+  margin: 24px 0;
+}
+@media (max-width: 640px) {
+  .shell {
+    padding: 20px 16px;
+  }
+  .toolbar {
+    align-items: flex-start;
+    flex-direction: column-reverse;
+    gap: 0;
+  }
+  .breadcrumbs {
+    font-size: 11px;
+  }
+  h1 {
+    font-size: 24px;
+    line-height: 1.25;
+  }
+  .subtitle {
+    font-size: 13px;
+  }
+  .diagram-scroll {
+    border: 1px solid #dce2e8;
+  }
+  .diagram {
+    min-width: 1280px;
+  }
+  .context-anchor {
+    min-width: 200px;
+  }
+  pre {
+    padding: 16px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media print {
+  .toolbar,
+  .context,
+  .evidence,
+  .standalone-nav {
+    display: none !important;
+  }
+  .shell {
+    padding: 0;
+    max-width: none;
+  }
+  .diagram {
+    min-width: 0;
+  }
+  .diagram-scroll {
+    overflow: visible;
+    border: 0;
+  }
+  .brand {
+    display: none;
+  }
+}
+
+</style></head><body><div class="shell"><a class="brand" href="index.html">BONSAI <span>Causal / architecture</span></a><nav class="standalone-nav" aria-label="Document"><a href="index.html">Open interactive overview</a></nav><main><h1 tabindex="-1">How do predictions become effect estimates?</h1><p class="subtitle">Configured methods choose the uncertainty route; several methods can run together.</p><div class="diagram-scroll" tabindex="0" role="region" aria-label="Scrollable diagram: Effect estimates"><svg class="diagram" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-labelledby="estimation-title estimation-desc"><title id="estimation-title">How do predictions become effect estimates?</title><desc id="estimation-desc">Load calibrated predictions, optionally filter common support, and prepare each outcome. Dispatch configured methods to bootstrap estimation or single-shot TMLE_TH, then combine results into tables and plots.</desc><defs><marker id="estimation-arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#4b586e"/></marker><marker id="estimation-arrow-accent" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#35b2bf"/></marker><marker id="estimation-arrow-link" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#2e5aa8"/></marker></defs><rect width="1280" height="720" fill="#f7fafb"/><path class="connector" d="M 288 144 L 384 144" fill="none" stroke="#4b586e" stroke-width="1.2" marker-end="url(#estimation-arrow)"/><path class="connector" d="M 592 144 L 688 144" fill="none" stroke="#4b586e" stroke-width="1.2" marker-end="url(#estimation-arrow)"/><path class="connector" d="M 792 188 L 792 288" fill="none" stroke="#4b586e" stroke-width="1.2" marker-end="url(#estimation-arrow)"/><path class="connector" d="M 696 344 L 544.0 344.0 Q 536 344 536.0 352.0 L 536 456" fill="none" stroke="#4b586e" stroke-width="1.2" marker-end="url(#estimation-arrow)"/><path class="connector" d="M 888 344 L 1040.0 344.0 Q 1048 344 1048.0 352.0 L 1048 456" fill="none" stroke="#4b586e" stroke-width="1.2" marker-end="url(#estimation-arrow)"/><path class="connector" d="M 536 544 L 536.0 572.0 Q 536 580 544.0 580.0 L 736.0 580.0 Q 744 580 744.0 588.0 L 744 616" fill="none" stroke="#4b586e" stroke-width="1.2" marker-end="url(#estimation-arrow)"/><path class="connector" d="M 1048 544 L 1048.0 572.0 Q 1048 580 1040.0 580.0 L 848.0 580.0 Q 840 580 840.0 588.0 L 840 616" fill="none" stroke="#4b586e" stroke-width="1.2" marker-end="url(#estimation-arrow)"/><g class="edge-caption"><rect x="315.0" y="115" width="42.0" height="16" fill="#f7fafb"/><text class="edge-label" x="336" y="126" text-anchor="middle">READS</text></g><g class="edge-caption"><rect x="616.4" y="115" width="47.2" height="16" fill="#f7fafb"/><text class="edge-label" x="640" y="126" text-anchor="middle">PASSES</text></g><g class="edge-caption"><rect x="821.4" y="227" width="73.2" height="16" fill="#f7fafb"/><text class="edge-label" x="858" y="238" text-anchor="middle">PER OUTCOME</text></g><g class="edge-caption"><rect x="547.8" y="315" width="104.4" height="16" fill="#f7fafb"/><text class="edge-label" x="600" y="326" text-anchor="middle">BOOTSTRAP METHODS</text></g><g class="edge-caption"><rect x="949.8" y="315" width="52.4" height="16" fill="#f7fafb"/><text class="edge-label" x="976" y="326" text-anchor="middle">TMLE_TH</text></g><g class="edge-caption"><rect x="605.8" y="551" width="52.4" height="16" fill="#f7fafb"/><text class="edge-label" x="632" y="562" text-anchor="middle">RESULTS</text></g><g class="edge-caption"><rect x="929.8" y="551" width="52.4" height="16" fill="#f7fafb"/><text class="edge-label" x="956" y="562" text-anchor="middle">RESULTS</text></g><g class="node artifact" id="estimation-calibrated" data-node="calibrated" data-label="Calibrated predictions"><rect class="node-box" x="80" y="100" width="208" height="88" rx="6"/><text class="tag" x="184.0" y="119" text-anchor="middle">INPUT</text><text class="node-name" x="184.0" y="147.0" text-anchor="middle">Calibrated predictions</text><text class="node-sub" x="184.0" y="165.0" text-anchor="middle">combined calibrated CSV</text></g><g class="node " id="estimation-support" data-node="support" data-label="Select analysis cohort"><rect class="node-box" x="384" y="100" width="208" height="88" rx="6"/><text class="tag" x="488.0" y="119" text-anchor="middle">FILTER</text><text class="node-name" x="488.0" y="147.0" text-anchor="middle">Select analysis cohort</text><text class="node-sub" x="488.0" y="165.0" text-anchor="middle">optional common support</text></g><g class="node " id="estimation-outcome" data-node="outcome" data-label="Prepare each outcome"><rect class="node-box" x="688" y="100" width="208" height="88" rx="6"/><text class="tag" x="792.0" y="119" text-anchor="middle">LOOP</text><text class="node-name" x="792.0" y="147.0" text-anchor="middle">Prepare each outcome</text><text class="node-sub" x="792.0" y="165.0" text-anchor="middle">A · Y · ps · Q(1) · Q(0)</text></g><a class="node-link" href="source-estimator.html" data-destination="source-estimator" data-kind="inside" aria-label="Look inside: Choose methods"><g class="node focal" id="estimation-dispatch" data-node="dispatch" data-label="Choose methods"><path class="node-box" d="M 792.0 288 L 888 344.0 L 792.0 400 L 696 344.0 Z"/><text class="tag" x="792.0" y="312" text-anchor="middle">DISPATCH</text><text class="node-name" x="792.0" y="342.0" text-anchor="middle">Choose methods</text><text class="node-sub" x="792.0" y="361.0" text-anchor="middle">View dispatch source</text></g></a><g class="node external" id="estimation-bootstrap" data-node="bootstrap" data-label="IPW / AIPW / TMLE"><rect class="node-box" x="432" y="456" width="208" height="88" rx="6"/><text class="tag" x="536.0" y="475" text-anchor="middle">CAUSALESTIMATE</text><text class="node-name" x="536.0" y="503.0" text-anchor="middle">IPW / AIPW / TMLE</text><text class="node-sub" x="536.0" y="521.0" text-anchor="middle">bootstrap when B &gt; 1</text></g><g class="node external" id="estimation-theoretical" data-node="theoretical" data-label="TMLE_TH"><rect class="node-box" x="944" y="456" width="208" height="88" rx="6"/><text class="tag" x="1048.0" y="475" text-anchor="middle">CAUSALESTIMATE</text><text class="node-name" x="1048.0" y="503.0" text-anchor="middle">TMLE_TH</text><text class="node-sub" x="1048.0" y="521.0" text-anchor="middle">single-shot analytic CI</text></g><g class="node artifact" id="estimation-tables" data-node="tables" data-label="Effects &amp; diagnostics"><rect class="node-box" x="688" y="616" width="208" height="72" rx="6"/><text class="tag" x="792.0" y="635" text-anchor="middle">OUTPUT</text><text class="node-name" x="792.0" y="655.0" text-anchor="middle">Effects &amp; diagnostics</text><text class="node-sub" x="792.0" y="673.0" text-anchor="middle">tables · intervals · plots</text></g><a href="fold.html" data-destination="fold" data-kind="related" class="related-link" aria-label="Related view: Related: prediction generation"><rect x="72" y="656" width="280" height="44" fill="transparent"/><text class="related" x="80" y="684">Related: prediction generation ↗</text></a><a href="config.html" data-destination="config" data-kind="related" class="related-link" aria-label="Related view: Estimator configuration"><rect x="72" y="604" width="280" height="44" fill="transparent"/><text class="related" x="80" y="632">Estimator configuration ↗</text></a></svg></div><details class="evidence"><summary>View source references</summary><p>Code evidence: BONSAI Causal <code>d97b5e9b83c0a3962494441542db9e7bbccef881</code>; CausalEstimate 0.13.0 <code>9193d476c58037fba7f4d047d03a577e84b6348e</code>.</p><ul><li>Outcome loop and estimator dispatch — <code>corebehrt/modules/causal/estimate.py</code></li><li>Named columns become potential-outcome predictions — <code>corebehrt/functional/estimate/data_handler.py</code></li><li>Bootstrap versus single evaluation — <code>9193d476c58037fba7f4d047d03a577e84b6348e/CausalEstimate/core/multi_estimator.py</code></li><li>Pinned TMLE API — <code>9193d476c58037fba7f4d047d03a577e84b6348e/CausalEstimate/estimators/tmle.py</code></li></ul><a href="evidence.html">Open revision-pinned source links ↗</a></details></main></div></body></html>

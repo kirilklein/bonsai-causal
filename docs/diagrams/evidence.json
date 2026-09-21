@@ -1,0 +1,145 @@
+{
+  "repositories": {
+    "bonsai-causal": {
+      "ref": "origin/main",
+      "sha": "d97b5e9b83c0a3962494441542db9e7bbccef881"
+    },
+    "CausalEstimate": {
+      "ref": "v0.13.0",
+      "sha": "9193d476c58037fba7f4d047d03a577e84b6348e",
+      "refreshed_main": "b38e07e2013ee33c05505df98044a62d1f25974e"
+    }
+  },
+  "claims": [
+    {
+      "diagram": "overview",
+      "claim": "Local commands or Azure jobs run causal analysis on MEDS data. The analysis calls CausalEstimate with prediction tables and saves effect estimates and diagnostics.",
+      "sources": [
+        {
+          "label": "Local pipeline entry points",
+          "url": "https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/.github/workflows/causal_pipeline.yml"
+        },
+        {
+          "label": "Azure artifact wiring",
+          "url": "https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/azure/pipelines/FINETUNE_CALIBRATE_ESTIMATE.py"
+        },
+        {
+          "label": "Estimator caller and table contract",
+          "url": "https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/modules/causal/estimate.py"
+        },
+        {
+          "label": "CausalEstimate 0.13.0 callee",
+          "url": "https://github.com/kirilklein/CausalEstimate/blob/9193d476c58037fba7f4d047d03a577e84b6348e/CausalEstimate/core/multi_estimator.py"
+        }
+      ]
+    },
+    {
+      "diagram": "analysis",
+      "claim": "Data preparation supplies pretraining and causal cohort preparation. Prepared patients and pretrained weights feed fold training and prediction, followed by calibration and effect estimation.",
+      "sources": [
+        {
+          "label": "Concrete stage ordering",
+          "url": "https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/.github/workflows/causal_pipeline.yml"
+        },
+        {
+          "label": "Joint fine-tuning entry point",
+          "url": "https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/main_causal/finetune_exp_y.py"
+        },
+        {
+          "label": "Calibration reads saved predictions",
+          "url": "https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/modules/setup/causal/prediction_processor.py"
+        },
+        {
+          "label": "Azure uses the same artifact chain",
+          "url": "https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/azure/pipelines/FINETUNE_CALIBRATE_ESTIMATE.py"
+        }
+      ]
+    },
+    {
+      "diagram": "fold",
+      "claim": "Training and prediction are separate responsibilities. Training uses the fold's training patients. A saved checkpoint is reloaded for validation and optional test evaluation. Validation predictions are combined across folds for calibration.",
+      "sources": [
+        {
+          "label": "Training, reload and evaluation",
+          "url": "https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/main_causal/helper/finetune_exp_y.py"
+        },
+        {
+          "label": "Factual and counterfactual prediction",
+          "url": "https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/modules/trainer/causal/trainer.py"
+        },
+        {
+          "label": "Only validation folds are accumulated",
+          "url": "https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/modules/setup/causal/prediction_accumulator.py"
+        }
+      ]
+    },
+    {
+      "diagram": "estimation",
+      "claim": "Load calibrated predictions, optionally filter common support, and prepare each outcome. Dispatch configured methods to bootstrap estimation or single-shot TMLE_TH, then combine results into tables and plots.",
+      "sources": [
+        {
+          "label": "Outcome loop and estimator dispatch",
+          "url": "https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/modules/causal/estimate.py"
+        },
+        {
+          "label": "Named columns become potential-outcome predictions",
+          "url": "https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/functional/estimate/data_handler.py"
+        },
+        {
+          "label": "Bootstrap versus single evaluation",
+          "url": "https://github.com/kirilklein/CausalEstimate/blob/9193d476c58037fba7f4d047d03a577e84b6348e/CausalEstimate/core/multi_estimator.py"
+        },
+        {
+          "label": "Pinned TMLE API",
+          "url": "https://github.com/kirilklein/CausalEstimate/blob/9193d476c58037fba7f4d047d03a577e84b6348e/CausalEstimate/estimators/tmle.py"
+        }
+      ]
+    },
+    {
+      "diagram": "config",
+      "claim": "Local commands and Azure jobs both use stage YAML, whose paths reference artifacts. Package installation reads project metadata and requirements. Azure environment construction also reads requirements and adds unpinned extras.",
+      "sources": [
+        {
+          "label": "YAML loading and config objects",
+          "url": "https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/modules/setup/config.py"
+        },
+        {
+          "label": "Azure job config and path overrides",
+          "url": "https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/azure/util/job.py"
+        },
+        {
+          "label": "Example stage paths and settings",
+          "url": "https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/configs/causal/finetune/simple.yaml"
+        },
+        {
+          "label": "Direct version pins",
+          "url": "https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/requirements.txt"
+        },
+        {
+          "label": "Dynamic package dependencies",
+          "url": "https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/pyproject.toml"
+        },
+        {
+          "label": "Azure environment and unpinned additions",
+          "url": "https://github.com/kirilklein/bonsai-causal/blob/d97b5e9b83c0a3962494441542db9e7bbccef881/corebehrt/azure/environment.py"
+        }
+      ]
+    }
+  ],
+  "snippets": [
+    {
+      "id": "source-fold",
+      "filename": "corebehrt/main_causal/helper/finetune_exp_y.py",
+      "start": 59,
+      "end": 166,
+      "source": "def finetune_fold(\n    cfg,\n    logger: logging.Logger,\n    finetune_folder: str,\n    train_data: CausalPatientDataset,\n    val_data: CausalPatientDataset,\n    fold: int,\n    test_data: CausalPatientDataset = None,\n) -> None:\n    \"\"\"Finetune model on one fold\"\"\"\n    if \"scheduler\" in cfg:\n        logger.info(\"Replacing steps with epochs in scheduler config\")\n        cfg.scheduler = replace_steps_with_epochs(\n            cfg.scheduler, cfg.trainer_args.batch_size, len(train_data)\n        )\n\n    fold_folder = join(finetune_folder, f\"fold_{fold}\")\n    os.makedirs(fold_folder, exist_ok=True)\n    os.makedirs(join(fold_folder, \"checkpoints\"), exist_ok=True)\n\n    logger.info(\"Saving pids\")\n    torch.save(train_data.get_pids(), join(fold_folder, \"train_pids.pt\"))\n    torch.save(val_data.get_pids(), join(fold_folder, \"val_pids.pt\"))\n    if len(test_data) > 0:\n        torch.save(test_data.get_pids(), join(fold_folder, \"test_pids.pt\"))\n\n    logger.info(\"Initializing datasets\")\n\n    train_dataset = ExposureOutcomesDataset(train_data.patients)\n    val_dataset = ExposureOutcomesDataset(val_data.patients)\n\n    modelmanager = CausalModelManager(cfg, fold)\n    checkpoint = modelmanager.load_checkpoint()\n    outcomes: Dict[str, List[int]] = (\n        train_data.get_outcomes()\n    )  # needed for sampler/ can be made optional\n    exposures = train_data.get_exposures()\n    model = modelmanager.initialize_finetune_model(checkpoint, outcomes, exposures)\n\n    if cfg.model.get(\"initialize_sigmoid_bias\", False):\n        model = initialize_sigmoid_bias(model, outcomes, exposures, logger)\n\n    optimizer, sampler, scheduler, cfg = modelmanager.initialize_training_components(\n        model, outcomes\n    )\n    epoch = modelmanager.get_epoch()\n    trainer = CausalEHRTrainer(\n        model=model,\n        optimizer=optimizer,\n        train_dataset=train_dataset,\n        val_dataset=val_dataset,\n        test_dataset=None,  # test only after training\n        args=cfg.trainer_args,\n        metrics=getattr(cfg, \"metrics\", {}),\n        sampler=sampler,\n        scheduler=scheduler,\n        cfg=cfg,\n        logger=logger,\n        accumulate_logits=True,\n        run_folder=fold_folder,\n        last_epoch=epoch,\n    )\n    trainer.train()\n\n    logger.info(\"Load best finetuned model to compute test scores\")\n    modelmanager_trained = CausalModelManager(cfg, fold)\n    checkpoint = modelmanager_trained.load_checkpoint(checkpoints=True)\n    model = modelmanager_trained.initialize_finetune_model(\n        checkpoint, outcomes, exposures\n    )\n\n    if cfg.get(\"visualize_weight_distributions\", False):\n        fold_folder = Path(fold_folder)\n        visualize_weight_distributions(\n            model, save_dir=fold_folder.parent / \"figs\" / fold_folder.name\n        )\n\n    trainer.model = model\n    trainer.val_dataset = val_dataset\n\n    logger.info(\"Evaluating on validation set\")\n    *_, val_prediction_data = trainer.evaluate(mode=\"val\")\n    if val_prediction_data is not None:\n        trainer.process_causal_classification_results(\n            val_prediction_data, mode=\"val\", save_results=True\n        )\n\n    if test_data and len(test_data) > 0:\n        logger.info(\"Evaluating on test set\")\n        test_dataset = ExposureOutcomesDataset(test_data.patients)\n        trainer.test_dataset = test_dataset\n        *_, test_prediction_data = trainer.evaluate(mode=\"test\")\n        if test_prediction_data is not None:\n            trainer.process_causal_classification_results(\n                test_prediction_data, mode=\"test\", save_results=True\n            )\n\n    if cfg.get(\"save_encodings\", False):\n        fold_folder = Path(fold_folder)\n        encoding_dir = fold_folder / \"encodings\"\n        EncodingSaver(model, val_dataset, train_data.vocab, encoding_dir).save()\n        if cfg.get(\"visualize_encodings\", False):\n            try:\n                EncodingAnalyzer(\n                    encoding_dir, fold_folder.parent / \"figs\" / encoding_dir.name\n                ).analyze()\n            except Exception as e:\n                logger.exception(f\"Failed to visualize encodings: {e}\")"
+    },
+    {
+      "id": "source-estimator",
+      "filename": "corebehrt/modules/causal/estimate.py",
+      "start": 189,
+      "end": 260,
+      "source": "    def _estimate_effects(\n        self, df: pd.DataFrame, outcome_name: str | None = None\n    ) -> pd.DataFrame:\n        \"\"\"\n        Estimate effects, separating bootstrap methods from theoretical (single-shot) methods.\n        \"\"\"\n        all_methods = self.estimator_cfg.methods\n\n        # Separate methods into bootstrap and theoretical groups\n        bootstrap_methods = [m for m in all_methods if m.lower() != \"tmle_th\"]\n        theoretical_methods = [m for m in all_methods if m.lower() == \"tmle_th\"]\n\n        all_effect_dicts = {}\n\n        # --- 1. Run Theoretical Estimators (if any) ---\n        if theoretical_methods:\n            self.logger.info(f\"Running theoretical estimator: {theoretical_methods[0]}\")\n            # Build only the TMLE estimator for a single run\n            tmle_th_estimator = TMLE(\n                effect_type=self.effect_type,\n                treatment_col=EXPOSURE_COL,\n                outcome_col=OUTCOME,\n                ps_col=PS_COL,\n                probas_col=PROBAS,\n                probas_t1_col=PROBAS_EXPOSED,\n                probas_t0_col=PROBAS_CONTROL,\n                clip_percentile=self.clip_percentile,\n            )\n            # Compute effect once, directly getting theoretical CI\n            effect_dict_th = tmle_th_estimator.compute_effect(df)\n            all_effect_dicts[\"TMLE_TH\"] = effect_dict_th\n\n        # --- 2. Run Bootstrap Estimators (if any) ---\n        if bootstrap_methods:\n            self.logger.info(f\"Running bootstrap estimators: {bootstrap_methods}\")\n            # Build a MultiEstimator for the remaining methods\n            bootstrap_estimator_list = self._build_estimators_for_methods(\n                bootstrap_methods\n            )\n\n            if bootstrap_estimator_list:\n                observed_results = (\n                    {\n                        estimator.__class__.__name__: estimator.compute_effect(df)\n                        for estimator in bootstrap_estimator_list\n                    }\n                    if self.use_observed_point_estimate\n                    else {}\n                )\n                multi_estimator = MultiEstimator(\n                    estimators=bootstrap_estimator_list, verbose=False\n                )\n                effect_dict_bs = multi_estimator.compute_effects(\n                    df,\n                    n_bootstraps=self.n_bootstrap,\n                    apply_common_support=False,\n                    common_support_threshold=None,\n                    return_bootstrap_samples=self.save_bootstrap_samples,\n                )\n                if self.save_bootstrap_samples:\n                    self._collect_bootstrap_results(effect_dict_bs, outcome_name)\n                for method, observed in observed_results.items():\n                    for key, value in observed.items():\n                        if key not in {\n                            EffectColumns.std_err,\n                            EffectColumns.CI95_lower,\n                            EffectColumns.CI95_upper,\n                        }:\n                            effect_dict_bs[method][key] = value\n                all_effect_dicts.update(effect_dict_bs)\n\n        return convert_effect_to_dataframe(all_effect_dicts)"
+    }
+  ]
+}
