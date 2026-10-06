@@ -14,7 +14,11 @@ estimator:
   methods: ["IPW", "TMLE", "TMLE_TH"]
   effect_type: "ATE"
   n_bootstrap: 30
+  # Use one of these, not both.
+  # common_support_threshold is data-dependent overlap.
+  # ps_cutoff: [lower, upper] is a fixed window, the same on every run.
   common_support_threshold: 0.001
+  ps_cutoff: null
   clip_percentile: 1.0
 
 plot:

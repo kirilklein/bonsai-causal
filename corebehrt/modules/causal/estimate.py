@@ -101,6 +101,7 @@ class EffectEstimator:
             f"(estimand), methods={methods}, n_bootstrap={self.n_bootstrap}, "
             f"common_support={self.common_support}, "
             f"common_support_threshold={self.common_support_threshold}, "
+            f"ps_cutoff={self.ps_cutoff}, "
             f"clip_percentile={self.clip_percentile}"
         )
         self.logger.info(msg)
@@ -425,8 +426,15 @@ class EffectEstimator:
         """
         self.common_support_threshold: float = cfg.get("common_support_threshold", None)
         self.common_support: bool = True if self.common_support_threshold else False
+        self.ps_cutoff = self._parse_ps_cutoff(cfg.get("ps_cutoff", None))
         self.n_bootstrap: int = cfg.get("n_bootstrap", 0)
         self.clip_percentile: float = cfg.get("clip_percentile", 1)
+        if self.common_support and self.ps_cutoff is not None:
+            raise ValueError(
+                "Set either estimator.common_support_threshold or estimator.ps_cutoff, "
+                "not both. Use common_support_threshold for data-dependent overlap, "
+                "or ps_cutoff: [lower, upper] for a fixed propensity-score window."
+            )
 
     def _get_analysis_cohort(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -447,7 +455,54 @@ class EffectEstimator:
                 f"Analysis cohort after common support filtering: {initial_len} → {len(df)} observations"
             )
 
+        if self.ps_cutoff is not None:
+            df = self._apply_ps_cutoff(df)
+
         torch.save(df[PID_COL].values, join(self.exp_dir, PATIENTS_FILE))
+        return df
+
+    @staticmethod
+    def _parse_ps_cutoff(raw) -> tuple[float, float] | None:
+        """Read ``ps_cutoff: [lower, upper]`` (for example ``[0.0007, 0.6765]``)."""
+        if raw is None:
+            return None
+        if isinstance(raw, str):
+            raw = [part.strip() for part in raw.strip("[]").split(",")]
+        try:
+            bounds = [float(value) for value in raw]
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                "estimator.ps_cutoff must be a pair [lower, upper], "
+                f"for example [0.0007, 0.6765]. Got {raw!r}."
+            ) from exc
+        if len(bounds) != 2:
+            raise ValueError(
+                "estimator.ps_cutoff must have exactly two bounds "
+                f"[lower, upper]. Got {raw!r}."
+            )
+        lower, upper = bounds
+        if not (0.0 <= lower < upper <= 1.0):
+            raise ValueError(
+                "estimator.ps_cutoff must satisfy 0 <= lower < upper <= 1. "
+                f"Got [{lower}, {upper}]."
+            )
+        return lower, upper
+
+    def _apply_ps_cutoff(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Keep patients whose propensity score is inside a fixed interval."""
+        lower, upper = self.ps_cutoff
+        before = len(df)
+        exposed_before = int((df[EXPOSURE_COL] == 1).sum())
+        keep = df[PS_COL].between(lower, upper, inclusive="both")
+        df = df.loc[keep].copy()
+        exposed_after = int((df[EXPOSURE_COL] == 1).sum())
+        msg = (
+            f"Fixed PS cutoff [{lower}, {upper}]: "
+            f"{before} → {len(df)} observations "
+            f"(exposed {exposed_before} → {exposed_after})"
+        )
+        self.logger.info(msg)
+        print(f"[estimate] {msg}", flush=True)
         return df
 
     def _load_counterfactual_outcomes(self) -> pd.DataFrame:
