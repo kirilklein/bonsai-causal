@@ -294,7 +294,16 @@ class EffectEstimator:
         os.makedirs(fig_dir, exist_ok=True)
 
         create_ps_comparison_plot(
-            self.df, self.analysis_df, PS_COL, EXPOSURE_COL, fig_dir
+            self.df,
+            self.analysis_df,
+            PS_COL,
+            EXPOSURE_COL,
+            fig_dir,
+            after_label=(
+                f"After PS cutoff {list(self.ps_cutoff)}"
+                if self.ps_cutoff is not None
+                else "After Common Support"
+            ),
         )
         create_ipw_plot(
             self.analysis_df[EXPOSURE_COL],
@@ -496,13 +505,21 @@ class EffectEstimator:
         keep = df[PS_COL].between(lower, upper, inclusive="both")
         df = df.loc[keep].copy()
         exposed_after = int((df[EXPOSURE_COL] == 1).sum())
+        ps_min = float(df[PS_COL].min()) if len(df) else float("nan")
+        ps_max = float(df[PS_COL].max()) if len(df) else float("nan")
         msg = (
             f"Fixed PS cutoff [{lower}, {upper}]: "
             f"{before} → {len(df)} observations "
-            f"(exposed {exposed_before} → {exposed_after})"
+            f"(exposed {exposed_before} → {exposed_after}); "
+            f"analysis PS range [{ps_min}, {ps_max}]"
         )
         self.logger.info(msg)
         print(f"[estimate] {msg}", flush=True)
+        if len(df) and (ps_min < lower or ps_max > upper):
+            raise RuntimeError(
+                f"PS cutoff failed: expected PS in [{lower}, {upper}], "
+                f"but analysis_df has [{ps_min}, {ps_max}]."
+            )
         return df
 
     def _load_counterfactual_outcomes(self) -> pd.DataFrame:

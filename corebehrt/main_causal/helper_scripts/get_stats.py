@@ -18,6 +18,7 @@ Outputs:
 """
 
 import logging
+import os
 from os.path import join
 
 import pandas as pd
@@ -173,6 +174,73 @@ def process_cohort(
     return stats, weighted_stats, criteria_processed, filtered
 
 
+def _parse_ps_cutoff(raw) -> tuple[float, float]:
+    """Read ``ps_cutoff: [lower, upper]`` (for example ``[0.0007, 0.6765]``)."""
+    if isinstance(raw, str):
+        raw = [part.strip() for part in raw.strip("[]").split(",")]
+    try:
+        bounds = [float(value) for value in raw]
+    except (TypeError, ValueError) as exc:
+        raise ValueError(
+            "ps_cutoff must be a pair [lower, upper], "
+            f"for example [0.0007, 0.6765]. Got {raw!r}."
+        ) from exc
+    if len(bounds) != 2:
+        raise ValueError(
+            f"ps_cutoff must have exactly two bounds [lower, upper]. Got {raw!r}."
+        )
+    lower, upper = bounds
+    if not (0.0 <= lower < upper <= 1.0):
+        raise ValueError(
+            "ps_cutoff must satisfy 0 <= lower < upper <= 1. "
+            f"Got [{lower}, {upper}]."
+        )
+    return lower, upper
+
+
+def _save_ps_cutoff_group_stats(
+    criteria: pd.DataFrame,
+    cfg,
+    logger: logging.Logger,
+    save_path: str,
+) -> None:
+    """Stats for patients kept by a fixed PS window and patients removed by it."""
+    if PS_COL not in criteria.columns:
+        raise ValueError(
+            "compare_ps_cutoff requires a propensity score column. "
+            "Set paths.ps_calibrated_predictions."
+        )
+
+    lower, upper = _parse_ps_cutoff(cfg.get("ps_cutoff"))
+    keep = criteria[PS_COL].between(lower, upper, inclusive="both")
+    included = criteria.loc[keep].copy()
+    excluded = criteria.loc[~keep].copy()
+
+    logger.info("--------------------------------")
+    logger.info(
+        "PS cutoff comparison [%s, %s]: included=%d (exposed=%d), "
+        "excluded=%d (exposed=%d)",
+        lower,
+        upper,
+        len(included),
+        int((included[EXPOSURE_COL] == 1).sum()) if EXPOSURE_COL in included else -1,
+        len(excluded),
+        int((excluded[EXPOSURE_COL] == 1).sum()) if EXPOSURE_COL in excluded else -1,
+    )
+
+    # Do not apply common support again inside these groups.
+    subgroup_cfg = cfg.copy()
+    subgroup_cfg["common_support_threshold"] = None
+
+    for name, group in (("ps_cutoff_included", included), ("ps_cutoff_excluded", excluded)):
+        group_dir = join(save_path, name)
+        os.makedirs(group_dir, exist_ok=True)
+        if group.empty:
+            logger.warning("No patients in %s; skipping stats", name)
+            continue
+        process_cohort(group, subgroup_cfg, logger, group_dir, name)
+
+
 def main(config_path: str):
     """Execute cohort selection and save results."""
     cfg = load_config(config_path)
@@ -247,6 +315,19 @@ def main(config_path: str):
 
     if cfg.get("make_love_plot", False) and cfg.get("weights", None) is not None:
         make_love_plot(stats, weighted_stats, save_path, LOVE_PLOT_FILE)
+
+    if cfg.get("compare_ps_cutoff", False):
+        if cfg.get("ps_cutoff", None) is None:
+            raise ValueError(
+                "compare_ps_cutoff is true but ps_cutoff is not set. "
+                "Add ps_cutoff: [lower, upper], for example [0.0007, 0.6765]."
+            )
+        if cfg.get("common_support_threshold", None) is not None:
+            logger.warning(
+                "compare_ps_cutoff splits the unfiltered cohort by ps_cutoff. "
+                "The primary stats above still use common_support_threshold."
+            )
+        _save_ps_cutoff_group_stats(criteria, cfg, logger, save_path)
 
     # Process secondary cohort if provided
     if secondary_cohort_config_path is not None:

@@ -304,7 +304,14 @@ def create_ipw_plot(
     plt.close(fig)
 
 
-def create_ps_comparison_plot(df_before, df_after, ps_col, exposure_col, save_dir: str):
+def create_ps_comparison_plot(
+    df_before,
+    df_after,
+    ps_col,
+    exposure_col,
+    save_dir: str,
+    after_label: str = "After Common Support",
+):
     try:
         fig, ax = plt.subplots(2, 1, figsize=(10, 6))
         ax: List[Axes] = ax.flatten()
@@ -313,7 +320,7 @@ def create_ps_comparison_plot(df_before, df_after, ps_col, exposure_col, save_di
             ps_col,
             exposure_col,
             ("Control", "Exposed"),
-            "Before Common Support",
+            "Before filtering",
             "Propensity Score",
             ax[0],
             min_quantile=0,
@@ -325,13 +332,13 @@ def create_ps_comparison_plot(df_before, df_after, ps_col, exposure_col, save_di
             ps_col,
             exposure_col,
             ("Control", "Exposed"),
-            "After Common Support",
+            after_label,
             "Propensity Score",
             ax[1],
             min_quantile=0,
             max_quantile=1,
         )
-        fig.suptitle("Effect of Common Support on Propensity Score")
+        fig.suptitle("Effect of PS filtering on Propensity Score")
         save_figure_with_azure_copy(
             fig, join(save_dir, "ps_comparison.png"), bbox_inches="tight"
         )

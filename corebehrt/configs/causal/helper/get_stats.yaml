@@ -18,3 +18,8 @@ paths:
 weights: ATE # chose from ATE, ATT, ATC or null
 common_support_threshold: 0.001 # only used if weights is not null
 plot_ps: true
+
+# Optional comparison of patients inside vs outside a fixed PS window.
+# Does not replace the primary stats above.
+compare_ps_cutoff: false
+ps_cutoff: null # example: [0.0007, 0.6765]
